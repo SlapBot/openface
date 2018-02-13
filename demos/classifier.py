@@ -109,6 +109,7 @@ def train(args):
                      map(os.path.dirname, labels)))  # Get the directory.
     fname = "{}/reps.csv".format(args.workDir)
     embeddings = pd.read_csv(fname, header=None).as_matrix()
+    labels = list(labels)
     le = LabelEncoder().fit(labels)
     labelsNum = le.transform(labels)
     nClasses = len(le.classes_)
@@ -167,7 +168,7 @@ def train(args):
 
     fName = "{}/classifier.pkl".format(args.workDir)
     print("Saving classifier to '{}'".format(fName))
-    with open(fName, 'w') as f:
+    with open(fName, 'wb') as f:
         pickle.dump((le, clf), f)
 
 
@@ -188,6 +189,7 @@ def infer(args, multiple=False):
             bbx = r[0]
             start = time.time()
             predictions = clf.predict_proba(rep).ravel()
+            print(predictions)
             maxI = np.argmax(predictions)
             person = le.inverse_transform(maxI)
             confidence = predictions[maxI]
@@ -197,7 +199,7 @@ def infer(args, multiple=False):
                 print("Predict {} @ x={} with {:.2f} confidence.".format(person.decode('utf-8'), bbx,
                                                                          confidence))
             else:
-                print("Predict {} with {:.2f} confidence.".format(person.decode('utf-8'), confidence))
+                print("Predict {} with {:.2f} confidence.".format(person, confidence))
             if isinstance(clf, GMM):
                 dist = np.linalg.norm(rep - clf.means_[maxI])
                 print("  + Distance from the mean: {}".format(dist))
